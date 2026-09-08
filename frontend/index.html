@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Grade Predictor</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --ink: #16181d;
+    --muted: #6b7280;
+    --line: #e3e6eb;
+    --accent: #3b5bdb;
+    --accent-ink: #ffffff;
+    --field: #ffffff;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a; --panel: #1c1f25; --ink: #e9eaee; --muted: #9aa1ad;
+      --line: #2c3038; --accent: #748ffc; --accent-ink: #10131a; --field: #22262e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 20px 64px; }
+  header { margin-bottom: 24px; }
+  h1 { margin: 0 0 6px; font-size: 24px; letter-spacing: -0.01em; }
+  .sub { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 20px;
+  }
+  fieldset { border: 0; margin: 0 0 22px; padding: 0; }
+  fieldset:last-of-type { margin-bottom: 0; }
+  legend {
+    padding: 0; margin-bottom: 12px; font-size: 12px; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+  label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+  label .unit { color: var(--muted); font-weight: 400; }
+  input, select {
+    width: 100%; padding: 9px 10px; font: inherit; font-size: 14px;
+    color: var(--ink); background: var(--field);
+    border: 1px solid var(--line); border-radius: 7px;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+  input:invalid { border-color: #e03131; }
+
+  .actions { display: flex; gap: 10px; align-items: center; margin-top: 22px; flex-wrap: wrap; }
+  button {
+    font: inherit; font-size: 14px; font-weight: 600; padding: 10px 20px;
+    border-radius: 7px; border: 1px solid transparent; cursor: pointer;
+  }
+  .primary { background: var(--accent); color: var(--accent-ink); }
+  .primary:disabled { opacity: .55; cursor: progress; }
+  .ghost { background: transparent; color: var(--muted); border-color: var(--line); font-weight: 500; }
+
+  .result { position: sticky; top: 20px; text-align: center; }
+  .placeholder { color: var(--muted); font-size: 14px; padding: 28px 6px; }
+  .grade {
+    font-size: 68px; font-weight: 700; line-height: 1; text-transform: uppercase;
+    letter-spacing: -0.02em; margin: 6px 0 2px;
+  }
+  .grade-label { font-size: 16px; font-weight: 600; }
+  .confidence { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  .bars { margin-top: 22px; text-align: left; border-top: 1px solid var(--line); padding-top: 16px; }
+  .bars h2 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  .bar-row { display: grid; grid-template-columns: 16px 1fr 44px; gap: 9px; align-items: center; margin-bottom: 7px; }
+  .bar-grade { font-weight: 600; text-transform: uppercase; font-size: 13px; }
+  .track { background: var(--line); border-radius: 99px; height: 7px; overflow: hidden; }
+  .fill { background: var(--accent); height: 100%; border-radius: 99px; transition: width .35s ease; }
+  .bar-pct { font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+  .msg { margin-top: 14px; padding: 11px 13px; border-radius: 7px; font-size: 13px; text-align: left; }
+  .msg.error { background: #fff0f0; color: #a92020; border: 1px solid #ffc9c9; }
+  @media (prefers-color-scheme: dark) { .msg.error { background: #2b1a1c; color: #ff9a9a; border-color: #532a2e; } }
+  footer { margin-top: 26px; color: var(--muted); font-size: 12px; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Student Grade Predictor</h1>
+    <p class="sub">Enter a student's profile, study habits and subject scores to predict their final grade.</p>
+  </header>
+
+  <div class="layout">
+    <form id="form" class="panel" novalidate>
+      <div id="fields"><p class="placeholder">Loading form&hellip;</p></div>
+      <div class="actions">
+        <button type="submit" class="primary" id="submit">Predict grade</button>
+        <button type="button" class="ghost" id="sample">Load sample</button>
+        <button type="button" class="ghost" id="reset">Reset</button>
+      </div>
+      <div id="form-msg"></div>
+    </form>
+
+    <aside class="panel result">
+      <div id="result">
+        <p class="placeholder">Fill in the form and submit to see a predicted grade.</p>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    Random Forest classifier &middot; 88% test accuracy &middot;
+    <a href="/docs">API docs</a>
+  </footer>
+</div>
+
+<script>
+const SAMPLE = {
+  age: 18, gender: "male", school_type: "private", parent_education: "phd",
+  study_hours: 7.0, attendance_percentage: 90.0, internet_access: "yes",
+  travel_time: "<15 min", extra_activities: "yes", study_method: "notes",
+  math_score: 85.0, science_score: 92.0, english_score: 88.0
+};
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+}[c]));
+
+let spec = null;
+
+function fieldHtml(f) {
+  const unit = f.unit ? ' <span class="unit">(' + esc(f.unit) + ')</span>' : "";
+  const label = '<label for="' + esc(f.name) + '">' + esc(f.label) + unit + '</label>';
+  if (f.type === "number") {
+    return '<div>' + label + '<input type="number" id="' + esc(f.name) + '" name="' + esc(f.name) +
+      '" min="' + f.min + '" max="' + f.max + '" step="' + f.step + '" value="' + f.default + '" required></div>';
+  }
+  const options = f.options.map((o) =>
+    '<option value="' + esc(o) + '"' + (o === f.default ? " selected" : "") + '>' + esc(o) + '</option>'
+  ).join("");
+  return '<div>' + label + '<select id="' + esc(f.name) + '" name="' + esc(f.name) + '">' + options + '</select></div>';
+}
+
+function renderForm(schema) {
+  spec = schema;
+  $("fields").innerHTML = schema.groups.map((group) => {
+    const fields = schema.fields.filter((f) => f.group === group);
+    if (!fields.length) return "";
+    return '<fieldset><legend>' + esc(group) + '</legend><div class="grid">' +
+      fields.map(fieldHtml).join("") + '</div></fieldset>';
+  }).join("");
+}
+
+function collect() {
+  const payload = {};
+  for (const f of spec.fields) {
+    const el = $(f.name);
+    payload[f.name] = f.type === "number" ? Number(el.value) : el.value;
+  }
+  return payload;
+}
+
+function applyValues(values) {
+  for (const key of Object.keys(values)) {
+    const el = $(key);
+    if (el) el.value = values[key];
+  }
+}
+
+function showMessage(target, text) {
+  $(target).innerHTML = text ? '<div class="msg error">' + esc(text) + '</div>' : "";
+}
+
+function clearResult() {
+  $("result").innerHTML = '<p class="placeholder">Fill in the form and submit to see a predicted grade.</p>';
+}
+
+function renderResult(data) {
+  const bars = data.breakdown.map((b) =>
+    '<div class="bar-row">' +
+      '<span class="bar-grade">' + esc(b.grade) + '</span>' +
+      '<span class="track"><span class="fill" style="width:' + (b.probability * 100).toFixed(1) + '%"></span></span>' +
+      '<span class="bar-pct">' + (b.probability * 100).toFixed(0) + '%</span>' +
+    '</div>'
+  ).join("");
+
+  $("result").innerHTML =
+    '<p class="sub">Predicted final grade</p>' +
+    '<div class="grade">' + esc(data.grade) + '</div>' +
+    '<div class="grade-label">' + esc(data.label) + '</div>' +
+    '<div class="confidence">' + (data.confidence * 100).toFixed(0) + '% confidence</div>' +
+    '<div class="bars"><h2>Probability by grade</h2>' + bars + '</div>';
+}
+
+// FastAPI returns validation errors as a list of {loc, msg}; plain errors as a string.
+function detailOf(data) {
+  const d = data && data.detail;
+  if (!d) return "";
+  if (typeof d === "string") return d;
+  return d.map((e) => (e.loc || []).slice(-1)[0] + ": " + e.msg).join("; ");
+}
+
+async function predict(event) {
+  event.preventDefault();
+  if (!$("form").reportValidity()) return;
+
+  const button = $("submit");
+  button.disabled = true;
+  button.textContent = "Predicting…";
+  showMessage("form-msg", "");
+
+  try {
+    const response = await fetch("/api/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(collect())
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(detailOf(data) || "Request failed (" + response.status + ")");
+    renderResult(data);
+  } catch (err) {
+    showMessage("form-msg", err.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Predict grade";
+  }
+}
+
+async function init() {
+  try {
+    const response = await fetch("/api/schema");
+    if (!response.ok) throw new Error("Could not load the form schema.");
+    renderForm(await response.json());
+  } catch (err) {
+    $("fields").innerHTML = '<div class="msg error">' + esc(err.message) + '</div>';
+    return;
+  }
+
+  const health = await fetch("/api/health").then((r) => r.json()).catch(() => null);
+  if (health && !health.model_loaded) {
+    showMessage("form-msg", health.error || "The model is not loaded on the server.");
+  }
+
+  $("form").addEventListener("submit", predict);
+  $("sample").addEventListener("click", () => applyValues(SAMPLE));
+  $("reset").addEventListener("click", () => {
+    const defaults = {};
+    spec.fields.forEach((f) => { defaults[f.name] = f.default; });
+    applyValues(defaults);
+    clearResult();
+    showMessage("form-msg", "");
+  });
+}
+
+init();
+</script>
+</body>
+</html>

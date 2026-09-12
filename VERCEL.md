@@ -12,8 +12,10 @@ Browser -> /api/predict -> FastAPI -> scaler -> Random Forest -> JSON -> Browser
 
 - `server.py` exports FastAPI; `pyproject.toml` selects it instead of the notebook
   export in `main.py`.
-- `.python-version` selects Python 3.12. `requirements.txt` includes the web and ML
-  dependencies, with sklearn 1.6.1 matching the saved model and scaler.
+- `.python-version` selects Python 3.12. `pyproject.toml` declares the web and ML
+  dependencies; `uv.lock` pins their resolved versions for Vercel. sklearn 1.6.1
+  matches the saved model and scaler. `requirements.txt` retains the same direct
+  dependency pins for pip-based local installs.
 - Both artifacts in `models/` are tracked by Git and included in the function.
   They are not copied into `public/` or exposed as website downloads.
 - The build runs `scripts/build_vercel.py`, creating `public/index.html` and
@@ -27,8 +29,9 @@ Browser -> /api/predict -> FastAPI -> scaler -> Random Forest -> JSON -> Browser
 
 ## Deploy
 
-1. Commit and push the project, including `models/best_random_forest_model.joblib`
-   and `models/scaler.joblib`, to your Git host. The model is about 70 MB.
+1. Commit and push the project, including `pyproject.toml`, `uv.lock`,
+   `models/best_random_forest_model.joblib` and `models/scaler.joblib`, to your Git
+   host. The model is about 70 MB.
 2. Import the repository at <https://vercel.com/new> with these settings:
 
 | Setting | Value |
@@ -36,7 +39,7 @@ Browser -> /api/predict -> FastAPI -> scaler -> Random Forest -> JSON -> Browser
 | Framework Preset | FastAPI |
 | Root Directory | Repository root |
 | Build Command | Leave override off; uses `python scripts/build_vercel.py` |
-| Install Command | Leave override off; uses `requirements.txt` |
+| Install Command | Leave override off; Vercel uses the uv project and lockfile |
 | Output Directory | Leave override off; integration handles `public/` |
 | Application environment variables | None |
 

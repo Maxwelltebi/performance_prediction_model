@@ -12,6 +12,9 @@ from features import form_schema
 
 
 def build(output_dir: Path = ROOT / "public") -> None:
+    for filename in ("best_random_forest_model.joblib", "scaler.joblib"):
+        if not (ROOT / "models" / filename).is_file():
+            raise FileNotFoundError(f"Required deployment artifact missing: models/{filename}")
     output_dir.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(ROOT / "frontend" / "index.html", output_dir / "index.html")
     (output_dir / "form-schema.json").write_text(

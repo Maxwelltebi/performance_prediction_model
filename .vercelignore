@@ -1,7 +1,7 @@
 venv/
 .venv*/
 .hf-release/
-models/
+.deployment-check/
 deploy/
 tests/
 backend/test_*.py

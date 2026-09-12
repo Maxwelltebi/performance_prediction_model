@@ -1,108 +1,96 @@
-# Deploy the portfolio app on Vercel
+﻿# Deploy the complete app on Vercel
 
-Vercel serves the HTML and form schema from its CDN. Submitting the form calls a
-lightweight FastAPI function, which sends validated inputs to an authenticated
-Hugging Face Inference Endpoint. The model and scaler run on HF.
+The frontend, API, model, and scaler deploy together on Vercel. No Hugging Face
+service, external prediction API, application environment variables, or tokens are required.
 
-## What is prepared
+```text
+Browser -> Vercel CDN: page and form schema
+Browser -> /api/predict -> FastAPI -> scaler -> Random Forest -> JSON -> Browser
+```
 
-- `server.py` exports the FastAPI application. `pyproject.toml` selects it explicitly,
-  so Vercel does not run the original notebook export in `main.py`.
-- `requirements.txt` includes only the web runtime. Use `requirements-local.txt`
-  for local inference and `requirements-dev.txt` for all tests.
-- `.python-version` selects Python 3.14 for the web function. HF's Python and
-  sklearn versions are configured separately in its serving environment.
-- The build command in `pyproject.toml` runs `scripts/build_vercel.py`, copying the
-  page into `public/index.html` and generating `public/form-schema.json` from
-  `backend/features.py`. These generated files do not require a running model.
-- `vercel.json` routes `/` to the static page and gives the function 120 seconds.
-  `.vercelignore` and function exclusions keep artifacts, virtual environments,
-  training notebooks, and tests out of the deployment.
-- On Vercel, missing HF configuration produces a 503; it never falls back to
-  loading the local model. Local `run.ps1` still supports local inference.
-- The UI shows a message after five seconds of waiting and aborts after 90 seconds.
-  The HF client uses a 10-second connect timeout and a 60-second read timeout.
-  The form recovers after failures and allows another submission.
+## Deployment configuration
 
-## 1. Have an HF inference endpoint ready
+- `server.py` exports FastAPI; `pyproject.toml` selects it instead of the notebook
+  export in `main.py`.
+- `.python-version` selects Python 3.12. `requirements.txt` includes the web and ML
+  dependencies, with sklearn 1.6.1 matching the saved model and scaler.
+- Both artifacts in `models/` are tracked by Git and included in the function.
+  They are not copied into `public/` or exposed as website downloads.
+- The build runs `scripts/build_vercel.py`, creating `public/index.html` and
+  `public/form-schema.json`. Opening the form does not require model initialization.
+- FastAPI loads the bundled artifacts once per function instance. There are no
+  model downloads or remote prediction calls.
+- `/api/health` returns 200 when the model is loaded and 503 if startup fails.
+  Invalid prediction input returns 422.
+- The function duration limit is 120 seconds. The UI displays a waiting message
+  after five seconds and restores the submit button after failures or a 90-second timeout.
 
-Follow [HUGGING_FACE.md](HUGGING_FACE.md) for the model repository and endpoint.
-Vercel needs the **inference endpoint URL**, not the model repository URL.
-The endpoint must use this project's custom handler and return its grade response.
+## Deploy
 
-The existing model and scaler are unchanged. Local tests still warn that the
-artifacts were saved with sklearn 1.6.1, while the local environment has 1.9.0.
-Validate the HF serving environment separately as described in the HF guide.
-
-## 2. Import the Git repository
-
-Commit and push the prepared source to your Git host, then import the repository
-at <https://vercel.com/new>. Use these settings:
+1. Commit and push the project, including `models/best_random_forest_model.joblib`
+   and `models/scaler.joblib`, to your Git host. The model is about 70 MB.
+2. Import the repository at <https://vercel.com/new> with these settings:
 
 | Setting | Value |
 | --- | --- |
 | Framework Preset | FastAPI |
 | Root Directory | Repository root |
-| Build Command | Leave the override off; uses `python scripts/build_vercel.py` |
-| Install Command | Leave the override off; uses `requirements.txt` |
-| Output Directory | Leave the override off; FastAPI integration handles `public/` |
+| Build Command | Leave override off; uses `python scripts/build_vercel.py` |
+| Install Command | Leave override off; uses `requirements.txt` |
+| Output Directory | Leave override off; integration handles `public/` |
+| Application environment variables | None |
 
-There is no Uvicorn start command to configure on Vercel. The platform invokes
-`server:app`. Keep Fluid compute enabled. The generated public directory is ignored
-by Git intentionally: the Vercel build creates it from the source on every deploy.
+3. If you previously entered `HF_ENDPOINT_URL` or `HF_TOKEN`, remove them from
+   Vercel. They are no longer used. No HF repository or endpoint is needed.
+4. Deploy with Fluid compute enabled. Vercel invokes `server:app`; there is no
+   Uvicorn start command. Check dependency installation and static build logs.
 
-## 3. Set server-side environment variables
+## Verify the deployed app
 
-In the Vercel project's Environment Variables settings, add:
+- Open the production URL in a signed-out browser and check that deployment
+  protection does not require recruiters to sign in.
+- All 13 fields should appear. The page fetches `/form-schema.json`, not an API
+  health check. Only submitting the form should invoke `/api/predict`.
+- Load the sample and submit: the current artifacts return grade `b` and confidence
+  `0.68`. Check `/api/health` for `model_loaded: true` if prediction fails.
+- Revisit after inactivity and measure the first prediction. CDN delivery keeps
+  the page independent of Python startup, but Vercel can still cold-start the API
+  and reload the model. This does not promise instant first predictions.
+- Check function size and memory in deployment output. The 70 MB model does not
+  represent total bundle size or runtime RAM. The standard Python bundle limit is
+  500 MB uncompressed; Vercel's cloud build is the final packaging check.
 
-| Name | Value |
-| --- | --- |
-| `HF_ENDPOINT_URL` | `https://YOUR-ENDPOINT.REGION.PROVIDER.endpoints.huggingface.cloud` |
-| `HF_TOKEN` | A token authorized to call your protected HF endpoint |
+## Local environment and checks
 
-Mark the token as sensitive when available. Set values for Production and, if you
-want live predictions in preview deployments, Preview. Do not put tokens in the
-frontend or commit them to Git. No browser-visible environment variable is needed.
-Deploy/redeploy after setting the variables.
-
-## 4. Verify before putting the URL on your portfolio
-
-1. Check the build log for successful static file generation and Python deployment.
-2. Open the site and confirm that all 13 fields appear. The browser should request
-   `/form-schema.json` on page load and no `/api/*` endpoints until submitting.
-3. Load the sample values and submit. Compare the result with the same inputs sent
-   directly to HF. The browser must communicate with your Vercel domain only for
-   predictions; the HF token must not appear in browser requests or page source.
-4. `/api/health` reports web-client readiness, not live HF model availability.
-   A real prediction verifies the full connection. Invalid input returns 422;
-   HF timeouts, bad responses and unavailability return 503.
-5. Test the site again after inactivity. CDN delivery avoids a Python startup wait
-   for the page, but the Vercel function can still cold-start on prediction.
-6. Ensure the production link opens in a signed-out/incognito browser. Review any
-   Vercel deployment protection setting that would require a recruiter to log in.
-
-If HF scales to zero, a recruiter can still wait for the model to start. For steady
-prediction availability, disable HF scale-to-zero and retain at least one replica;
-this incurs ongoing HF compute charges. No always-warm compute guarantee is implied
-by using Vercel. Review request limits and spending settings before sharing publicly.
-
-## Local checks
+Use Python 3.12 for the pinned dependencies. The previous Python 3.14 / sklearn 1.9
+virtual environment is left untouched. With uv installed:
 
 ```powershell
-.\venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\venv\Scripts\python.exe scripts/build_vercel.py
-.\venv\Scripts\python.exe -m pytest backend tests -q
+uv venv .venv-vercel --python 3.12
+uv pip install --python .venv-vercel/Scripts/python.exe -r requirements-dev.txt
+.venv-vercel/Scripts/python.exe -m uvicorn app:app --app-dir backend --reload
+```
+
+Without uv, use an installed Python 3.12 interpreter to create a virtual environment
+and install `requirements-dev.txt` with its pip. `requirements-local.txt` is an alias
+of `requirements.txt` for older commands. The older `run.ps1` uses `venv/`.
+
+```powershell
+.venv-vercel/Scripts/python.exe scripts/build_vercel.py
+.venv-vercel/Scripts/python.exe -m pytest backend tests -q
 node --test tests/frontend.test.cjs
 ```
 
-`run.ps1` serves the same frontend locally. The local FastAPI route
-`/form-schema.json` supplies the schema without requiring a generated public build.
-On Vercel the generated static file is served at that URL by the CDN.
+The model and scaler are unchanged. The known notebook scaler-fit issue remains;
+switching hosting does not require retraining and does not correct model quality.
+Local tests do not replace a Vercel cloud build and hosted prediction check.
 
-These checks validate local code and build output. A Vercel cloud build, CDN routing,
-and authenticated HF prediction must still be verified in the actual deployment.
+Verified locally with Python 3.12.14 and sklearn 1.6.1: 14 Python tests and four
+frontend tests pass, including a real prediction through the Vercel entrypoint
+without HF configuration. No sklearn artifact-version warnings were emitted.
+Linux x86_64 Python 3.12 wheels resolved successfully; their unpacked contents plus
+both model artifacts total approximately 345.6 MB before source, bytecode and runtime
+overhead. This is a packaging estimate, not a measured Vercel bundle or RAM usage.
 
 Sources: [FastAPI on Vercel](https://vercel.com/docs/frameworks/backend/fastapi),
-[Python runtime](https://vercel.com/docs/functions/runtimes/python),
-[Fluid compute](https://vercel.com/docs/fluid-compute),
-[HF autoscaling](https://huggingface.co/docs/inference-endpoints/guides/autoscaling).
+[Python runtime and packaging](https://vercel.com/docs/functions/runtimes/python).

@@ -27,14 +27,18 @@ main.py              Original notebook export — see "Known issues" below
 ## Running locally
 
 ```powershell
-python -m venv venv
-venv\Scripts\python.exe -m pip install -r requirements-local.txt
-.\run.ps1
+uv venv .venv-vercel --python 3.12
+uv pip install --python .venv-vercel/Scripts/python.exe -r requirements.txt
+.venv-vercel/Scripts/python.exe -m uvicorn app:app --app-dir backend --reload
 ```
 
 Then open <http://127.0.0.1:8000>. Interactive API docs are at `/docs`.
 
-Without the helper script:
+Use Python 3.12 with these pinned dependencies. Without `uv`, create a virtual
+environment using an installed Python 3.12 interpreter and install `requirements.txt`
+with its pip. The older `run.ps1` helper uses `venv/`.
+
+The existing environment can still be started with:
 
 ```powershell
 venv\Scripts\python.exe -m uvicorn app:app --app-dir backend --reload
@@ -43,8 +47,10 @@ venv\Scripts\python.exe -m uvicorn app:app --app-dir backend --reload
 ## Tests
 
 ```powershell
-venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-venv\Scripts\python.exe -m pytest backend/test_predictor.py -q
+uv pip install --python .venv-vercel/Scripts/python.exe -r requirements-dev.txt
+.venv-vercel/Scripts/python.exe scripts/build_vercel.py
+.venv-vercel/Scripts/python.exe -m pytest backend tests -q
+node --test tests/frontend.test.cjs
 ```
 
 ## API
@@ -80,31 +86,14 @@ and the model cannot drift apart. `GET /api/health` reports whether the artifact
 
 ## Deploying
 
-**Recommended portfolio deployment:** [Vercel + Hugging Face](VERCEL.md).
-Vercel serves the page and generated form schema from its CDN; the Python function
-calls HF only when a visitor requests a prediction. `requirements.txt` now installs
-the lightweight web runtime; local model inference uses `requirements-local.txt`.
+Follow [the Vercel deployment guide](VERCEL.md). Vercel serves the page and generated
+form schema from its CDN, while its Python function runs the bundled model and scaler.
+No Hugging Face account, API URL, token, or application environment variable is needed.
 
-For a separate Hugging Face inference service with a lightweight Render web app,
-follow [the Hugging Face walkthrough](HUGGING_FACE.md). It includes artifact upload,
-environment validation, endpoint setup, secrets, and the web service settings.
-The instructions below describe the original local-inference deployment.
-For that deployment, install `requirements-local.txt` and leave `HF_ENDPOINT_URL`
-unset. The default `requirements.txt` is intended for remote HF inference.
-
-The frontend is served from the same origin as the API, so there is no CORS setup and
-nothing to build — deploy the repo as one service.
-
-```
-uvicorn app:app --app-dir backend --host 0.0.0.0 --port $PORT
-```
-
-A `Procfile` with that command is included for Render / Railway / Heroku-style hosts.
-
-`models/best_random_forest_model.joblib` is ~70 MB and **is committed** for local
-inference. Vercel excludes it because predictions run on HF. That is under GitHub's 100 MB hard limit but above its 50 MB
-warning; consider Git LFS, or fetching the artifact at boot from object storage, if the
-repo history gets heavy.
+Both artifacts in `models/` are committed and included in the function; the forest
+is about 70 MB. `requirements.txt` includes both web and ML dependencies. Python 3.12
+and sklearn 1.6.1 are selected to run the existing artifacts without re-exporting them.
+The first prediction can still incur a function cold start; the page remains static.
 
 ## Known issues
 

@@ -4,7 +4,8 @@
   "functions": {
     "server.py": {
       "maxDuration": 120,
-      "excludeFiles": "{models/**,venv/**,.venv*/**,.hf-release/**,deploy/**,backend/test_*.py,main.py,*.ipynb,tests/**}"
+      "includeFiles": "models/*.joblib",
+      "excludeFiles": "{venv/**,.venv*/**,.deployment-check/**,.hf-release/**,deploy/**,backend/test_*.py,main.py,*.ipynb,tests/**}"
     }
   },
   "rewrites": [

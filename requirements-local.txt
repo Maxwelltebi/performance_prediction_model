@@ -1,6 +1,2 @@
-# Existing local inference environment; HF keeps its separate artifact requirements.
+# Compatibility alias: local development and Vercel now use the same dependencies.
 -r requirements.txt
-pandas==3.0.5
-scikit-learn==1.9.0
-joblib==1.6.0
-numpy==2.5.3

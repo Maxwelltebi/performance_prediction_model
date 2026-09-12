@@ -1,7 +1,6 @@
 """FastAPI service exposing the student grade model, plus the single-page UI."""
 
 import logging
-import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -10,7 +9,6 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from features import form_schema
-from remote_predictor import RemoteGradePredictor, RemotePredictionUnavailable
 from schemas import PredictionResponse, StudentInput
 
 logger = logging.getLogger("uvicorn.error")
@@ -22,27 +20,19 @@ state: dict = {"predictor": None, "error": None}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialize local inference or the remote client once per process."""
+    """Load the bundled model once per function instance, including on Vercel."""
     state.update(predictor=None, error=None)
-    state["mode"] = "remote" if os.getenv("HF_ENDPOINT_URL") or os.getenv("VERCEL") == "1" else "local"
     try:
-        if state["mode"] == "remote":
-            state["predictor"] = RemoteGradePredictor(
-                os.getenv("HF_ENDPOINT_URL", ""), os.getenv("HF_TOKEN", "")
-            )
-        else:
-            from predictor import GradePredictor
+        from predictor import GradePredictor
 
-            state["predictor"] = GradePredictor()
-        logger.info("Prediction backend initialized (%s).", state["mode"])
-    except Exception as exc:  # keep serving /api/health so the UI can explain why
+        state["predictor"] = GradePredictor()
+        logger.info("Bundled model and scaler loaded successfully.")
+    except Exception:  # keep serving /api/health so the UI can explain why
         state["error"] = "Prediction backend could not initialize. Check server configuration."
-        logger.error("Prediction backend initialization failed (%s).", type(exc).__name__)
+        logger.exception("Bundled model initialization failed")
     try:
         yield
     finally:
-        if isinstance(state["predictor"], RemoteGradePredictor):
-            state["predictor"].close()
         state["predictor"] = None
 
 
@@ -70,10 +60,9 @@ def health(response: Response) -> dict:
     response.status_code = 200 if ready else 503
     return {
         "status": "ok" if ready else "degraded",
-        "mode": state.get("mode", "local"),
-        "model_loaded": ready if state.get("mode") != "remote" else None,
+        "mode": "local",
+        "model_loaded": ready,
         "backend_ready": ready,
-        "remote_model_status": "not_probed" if state.get("mode") == "remote" else None,
         "error": state["error"],
     }
 
@@ -90,8 +79,6 @@ def predict(student: StudentInput) -> PredictionResponse:
     predictor = _require_predictor()
     try:
         result = predictor.predict(student.model_dump())
-    except RemotePredictionUnavailable as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("Prediction failed")
         raise HTTPException(status_code=500, detail="Prediction failed. Please try again.") from exc

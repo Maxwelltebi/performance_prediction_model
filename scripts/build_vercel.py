@@ -17,6 +17,8 @@ def build(output_dir: Path = ROOT / "public") -> None:
             raise FileNotFoundError(f"Required deployment artifact missing: models/{filename}")
     output_dir.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(ROOT / "frontend" / "index.html", output_dir / "index.html")
+    (output_dir / "static").mkdir(exist_ok=True)
+    shutil.copyfile(ROOT / "frontend" / "logo.svg", output_dir / "static" / "logo.svg")
     (output_dir / "form-schema.json").write_text(
         json.dumps(form_schema(), ensure_ascii=False), encoding="utf-8"
     )
@@ -24,4 +26,4 @@ def build(output_dir: Path = ROOT / "public") -> None:
 
 if __name__ == "__main__":
     build()
-    print("Built public/index.html and public/form-schema.json for Vercel CDN.")
+    print("Built the page, form schema, and shared logo/favicon for Vercel CDN.")

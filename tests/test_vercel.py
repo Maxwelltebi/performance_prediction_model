@@ -22,11 +22,22 @@ def test_static_build_contains_full_form_without_api_bootstrap(tmp_path):
 
 def test_vercel_entrypoint_predicts_with_bundled_artifacts_and_no_secrets():
     script = '''
+import json
 import sys
+from pathlib import Path
 from fastapi.testclient import TestClient
 from server import app
 from schemas import StudentInput
 with TestClient(app) as client:
+    # Vercel forwards internal rewrites with the destination as the request path.
+    # Test that path too; testing only FastAPI's '/' misses deployment-only 404s.
+    config = json.loads(Path('vercel.json').read_text())
+    homepage = next(rule['destination'] for rule in config['rewrites'] if rule['source'] == '/')
+    for path in ('/', homepage):
+        page = client.get(path)
+        assert page.status_code == 200, (path, page.text)
+        assert page.headers['content-type'].startswith('text/html')
+        assert '<form' in page.text
     health = client.get('/api/health')
     assert health.status_code == 200
     assert health.json()['model_loaded'] is True

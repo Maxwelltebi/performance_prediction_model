@@ -20,6 +20,10 @@ Browser -> /api/predict -> FastAPI -> scaler -> Random Forest -> JSON -> Browser
   They are not copied into `public/` or exposed as website downloads.
 - The build runs `scripts/build_vercel.py`, creating `public/index.html` and
   `public/form-schema.json`. Opening the form does not require model initialization.
+- The homepage rewrite targets `/static/index.html`, the frontend's registered
+  static route. Vercel passes rewritten paths to FastAPI, so the destination must
+  exist even when generated `public/` files are not picked up by the deployment.
+  `/static/index.html` can also be opened directly to check frontend availability.
 - FastAPI loads the bundled artifacts once per function instance. There are no
   model downloads or remote prediction calls.
 - `/api/health` returns 200 when the model is loaded and 503 if startup fails.

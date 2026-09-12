@@ -46,15 +46,17 @@ def _fitted_ordinal_encoder(order: list[str], column: str) -> OrdinalEncoder:
 
 
 class GradePredictor:
-    def __init__(self) -> None:
-        missing = [p.name for p in (MODEL_PATH, SCALER_PATH) if not p.exists()]
+    def __init__(self, model_dir: Path = MODEL_DIR) -> None:
+        model_path = Path(model_dir) / MODEL_PATH.name
+        scaler_path = Path(model_dir) / SCALER_PATH.name
+        missing = [p.name for p in (model_path, scaler_path) if not p.exists()]
         if missing:
             raise ArtifactsMissing(
-                f"Missing artifact(s) in {MODEL_DIR}: {', '.join(missing)}"
+                f"Missing artifact(s) in {model_dir}: {', '.join(missing)}"
             )
 
-        self.model = joblib.load(MODEL_PATH)
-        self.scaler = joblib.load(SCALER_PATH)
+        self.model = joblib.load(model_path)
+        self.scaler = joblib.load(scaler_path)
         self.encoder_parent_education = _fitted_ordinal_encoder(
             PARENT_EDUCATION_ORDER, "parent_education"
         )

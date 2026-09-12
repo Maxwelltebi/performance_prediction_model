@@ -3,98 +3,228 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Student Grade Predictor</title>
+<title>Gradience AI — Academic Intelligence &amp; Predictive Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    color-scheme: light dark;
-    --bg: #f6f7f9;
-    --panel: #ffffff;
-    --ink: #16181d;
-    --muted: #6b7280;
-    --line: #e3e6eb;
-    --accent: #3b5bdb;
-    --accent-ink: #ffffff;
-    --field: #ffffff;
-    --radius: 10px;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #14161a; --panel: #1c1f25; --ink: #e9eaee; --muted: #9aa1ad;
-      --line: #2c3038; --accent: #748ffc; --accent-ink: #10131a; --field: #22262e;
-    }
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  }
-  .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 20px 64px; }
-  header { margin-bottom: 24px; }
-  h1 { margin: 0 0 6px; font-size: 24px; letter-spacing: -0.01em; }
-  .sub { margin: 0; color: var(--muted); font-size: 14px; }
+    color-scheme: dark;
 
-  .layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
-  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+    /* Ground */
+    --bg:          #0e0e24;
+    --bg-glow-a:   rgba(99, 102, 241, .18);
+    --bg-glow-b:   rgba(124, 58, 237, .14);
+    --panel:       #17173a;
+    --panel-2:     #1c1c45;
+    --field:       #12122e;
+    --line:        #2a2a57;
+    --line-soft:   #232350;
+
+    /* Brand */
+    --primary:     #6366f1;
+    --primary-2:   #818cf8;
+    --violet:      #7c3aed;
+    --emerald:     #10b981;
+    --amber:       #f59e0b;
+    --rose:        #f43f5e;
+
+    /* Ink */
+    --ink:         #ececf8;
+    --ink-2:       #b9b9dc;
+    --muted:       #8585ac;
+
+    --radius:      14px;
+    --radius-sm:   9px;
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink);
+    background: var(--bg);
+    background-image:
+      radial-gradient(900px 500px at 12% -8%, var(--bg-glow-a), transparent 60%),
+      radial-gradient(760px 460px at 92% 4%, var(--bg-glow-b), transparent 62%);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 34px 22px 70px; }
+
+  /* ---------- Header ---------- */
+  header { display: flex; align-items: center; gap: 14px; margin-bottom: 30px; }
+  .logo {
+    width: 46px; height: 46px; flex: none; border-radius: 13px;
+    background: linear-gradient(150deg, #2a2568, #191540);
+    border: 1px solid #3a3480;
+    display: grid; place-items: center;
+    box-shadow: 0 8px 22px rgba(88, 74, 220, .34);
+  }
+  .brand { display: flex; flex-direction: column; }
+  .brand h1 {
+    margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -.02em;
+    background: linear-gradient(92deg, #c7c9ff, #a78bfa 46%, #7dd3c4);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .brand p { margin: 1px 0 0; font-size: 12.5px; color: var(--muted); letter-spacing: .02em; }
+
+  /* ---------- Layout ---------- */
+  .layout { display: grid; grid-template-columns: 1fr 358px; gap: 22px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
 
   .panel {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: var(--radius); padding: 20px;
+    background: linear-gradient(168deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: 0 16px 40px rgba(5, 5, 22, .42);
   }
-  fieldset { border: 0; margin: 0 0 22px; padding: 0; }
+
+  /* ---------- Form ---------- */
+  fieldset { border: 0; margin: 0 0 26px; padding: 0; }
   fieldset:last-of-type { margin-bottom: 0; }
-  legend {
-    padding: 0; margin-bottom: 12px; font-size: 12px; font-weight: 600;
-    letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  legend { padding: 0; width: 100%; }
+  .leg {
+    display: flex; align-items: center; gap: 9px; margin-bottom: 15px;
+    font-size: 11.5px; font-weight: 700; letter-spacing: .11em;
+    text-transform: uppercase; color: var(--ink-2);
   }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
-  label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+  .leg::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .dot.i { background: var(--primary); box-shadow: 0 0 9px var(--primary); }
+  .dot.v { background: var(--violet);  box-shadow: 0 0 9px var(--violet); }
+  .dot.e { background: var(--emerald); box-shadow: 0 0 9px var(--emerald); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 15px; }
+
+  label { display: block; font-size: 12.5px; font-weight: 500; color: var(--ink-2); margin-bottom: 6px; }
   label .unit { color: var(--muted); font-weight: 400; }
+
   input, select {
-    width: 100%; padding: 9px 10px; font: inherit; font-size: 14px;
+    width: 100%; padding: 10px 12px;
+    font-family: var(--font); font-size: 14px; font-weight: 500;
     color: var(--ink); background: var(--field);
-    border: 1px solid var(--line); border-radius: 7px;
+    border: 1px solid var(--line); border-radius: var(--radius-sm);
+    transition: border-color .16s, box-shadow .16s, background .16s;
   }
-  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
-  input:invalid { border-color: #e03131; }
+  select {
+    appearance: none; padding-right: 32px; cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5l5-5' stroke='%238585ac' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+  }
+  input:hover, select:hover { border-color: #3a3a72; }
+  input:focus, select:focus {
+    outline: none; border-color: var(--primary);
+    background: #14143a;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, .22);
+  }
+  input:invalid:not(:placeholder-shown) { border-color: var(--rose); }
 
-  .actions { display: flex; gap: 10px; align-items: center; margin-top: 22px; flex-wrap: wrap; }
+  /* ---------- Buttons ---------- */
+  .actions { display: flex; gap: 11px; align-items: center; margin-top: 26px; flex-wrap: wrap; }
   button {
-    font: inherit; font-size: 14px; font-weight: 600; padding: 10px 20px;
-    border-radius: 7px; border: 1px solid transparent; cursor: pointer;
+    font-family: var(--font); font-size: 14px; font-weight: 600;
+    padding: 11px 22px; border-radius: 999px; border: 1px solid transparent;
+    cursor: pointer; transition: transform .12s, box-shadow .16s, background .16s, border-color .16s;
   }
-  .primary { background: var(--accent); color: var(--accent-ink); }
-  .primary:disabled { opacity: .55; cursor: progress; }
-  .ghost { background: transparent; color: var(--muted); border-color: var(--line); font-weight: 500; }
+  .primary {
+    color: #fff;
+    background: linear-gradient(96deg, var(--primary), var(--violet));
+    box-shadow: 0 8px 22px rgba(99, 102, 241, .36);
+  }
+  .primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(99, 102, 241, .46); }
+  .primary:disabled { opacity: .6; cursor: progress; box-shadow: none; }
+  .ghost { background: transparent; color: var(--ink-2); border-color: var(--line); }
+  .ghost:hover { border-color: #3f3f7d; color: var(--ink); background: rgba(99, 102, 241, .08); }
 
-  .result { position: sticky; top: 20px; text-align: center; }
-  .placeholder { color: var(--muted); font-size: 14px; padding: 28px 6px; }
+  /* ---------- Result ---------- */
+  .result { position: sticky; top: 22px; text-align: center; }
+  .placeholder { color: var(--muted); font-size: 13.5px; padding: 40px 10px; }
+  .placeholder svg { display: block; margin: 0 auto 14px; opacity: .5; }
+
+  .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--muted); margin: 0 0 12px;
+  }
+  .medal {
+    width: 122px; height: 122px; margin: 0 auto; position: relative;
+    display: grid; place-items: center;
+  }
+  .medal svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
   .grade {
-    font-size: 68px; font-weight: 700; line-height: 1; text-transform: uppercase;
-    letter-spacing: -0.02em; margin: 6px 0 2px;
+    font-size: 54px; font-weight: 800; line-height: 1;
+    text-transform: uppercase; letter-spacing: -.03em;
   }
-  .grade-label { font-size: 16px; font-weight: 600; }
-  .confidence { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .grade-label { margin-top: 14px; font-size: 16.5px; font-weight: 700; }
+  .confidence { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
 
-  .bars { margin-top: 22px; text-align: left; border-top: 1px solid var(--line); padding-top: 16px; }
-  .bars h2 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
-  .bar-row { display: grid; grid-template-columns: 16px 1fr 44px; gap: 9px; align-items: center; margin-bottom: 7px; }
-  .bar-grade { font-weight: 600; text-transform: uppercase; font-size: 13px; }
-  .track { background: var(--line); border-radius: 99px; height: 7px; overflow: hidden; }
-  .fill { background: var(--accent); height: 100%; border-radius: 99px; transition: width .35s ease; }
-  .bar-pct { font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .bars { margin-top: 24px; text-align: left; border-top: 1px solid var(--line-soft); padding-top: 18px; }
+  .bars h2 {
+    font-size: 11px; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 13px; font-weight: 700;
+  }
+  .bar-row { display: grid; grid-template-columns: 15px 1fr 40px; gap: 10px; align-items: center; margin-bottom: 9px; }
+  .bar-grade { font-weight: 700; text-transform: uppercase; font-size: 12.5px; color: var(--ink-2); }
+  .track { background: #101030; border: 1px solid var(--line-soft); border-radius: 999px; height: 8px; overflow: hidden; }
+  .fill { height: 100%; border-radius: 999px; width: 0; transition: width .5s cubic-bezier(.4, 0, .2, 1); }
+  .bar-pct { font-size: 11.5px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 
-  .msg { margin-top: 14px; padding: 11px 13px; border-radius: 7px; font-size: 13px; text-align: left; }
-  .msg.error { background: #fff0f0; color: #a92020; border: 1px solid #ffc9c9; }
-  @media (prefers-color-scheme: dark) { .msg.error { background: #2b1a1c; color: #ff9a9a; border-color: #532a2e; } }
-  footer { margin-top: 26px; color: var(--muted); font-size: 12px; }
-  footer a { color: inherit; }
+  /* Grade bands */
+  .band-strong { color: var(--emerald); }
+  .band-mid    { color: var(--primary-2); }
+  .band-risk   { color: var(--rose); }
+  .fill.band-strong { background: linear-gradient(90deg, #059669, var(--emerald)); }
+  .fill.band-mid    { background: linear-gradient(90deg, var(--primary), var(--primary-2)); }
+  .fill.band-risk   { background: linear-gradient(90deg, #be123c, var(--rose)); }
+
+  /* ---------- Messages ---------- */
+  .msg {
+    margin-top: 16px; padding: 12px 14px; border-radius: var(--radius-sm);
+    font-size: 13px; text-align: left;
+    background: rgba(244, 63, 94, .1); color: #ffa9b8; border: 1px solid rgba(244, 63, 94, .32);
+  }
+
+  footer {
+    margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line-soft);
+    color: var(--muted); font-size: 12px;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  .pill {
+    padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
+    background: rgba(99, 102, 241, .14); color: var(--primary-2); border: 1px solid rgba(99, 102, 241, .3);
+  }
+  footer a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line); }
+  footer a:hover { color: var(--primary-2); border-color: var(--primary); }
 </style>
 </head>
 <body>
 <div class="wrap">
+
   <header>
-    <h1>Student Grade Predictor</h1>
-    <p class="sub">Enter a student's profile, study habits and subject scores to predict their final grade.</p>
+    <div class="logo" aria-hidden="true">
+      <svg width="27" height="27" viewBox="0 0 32 32" fill="none">
+        <defs>
+          <linearGradient id="cap" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#a5b4fc"/><stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+        </defs>
+        <path d="M16 3 30 9.5 16 16 2 9.5 16 3Z" fill="url(#cap)"/>
+        <path d="M7 12.5v6.2c0 4.6 4 8.3 9 9.6 5-1.3 9-5 9-9.6v-6.2l-9 4.2-9-4.2Z"
+              fill="none" stroke="url(#cap)" stroke-width="2.1" stroke-linejoin="round"/>
+        <path d="M12.2 19.3 15 22.1l5-5" stroke="#fff" stroke-width="2.1"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="brand">
+      <h1>Gradience AI</h1>
+      <p>Academic Intelligence &amp; Predictive Analytics</p>
+    </div>
   </header>
 
   <div class="layout">
@@ -109,14 +239,14 @@
     </form>
 
     <aside class="panel result">
-      <div id="result">
-        <p class="placeholder">Fill in the form and submit to see a predicted grade.</p>
-      </div>
+      <div id="result"></div>
     </aside>
   </div>
 
   <footer>
-    Random Forest classifier &middot; 88% test accuracy &middot;
+    <span class="pill">Random Forest</span>
+    <span>88% test accuracy &middot; 25,000 students</span>
+    <span>&middot;</span>
     <a href="/docs">API docs</a>
   </footer>
 </div>
@@ -129,12 +259,24 @@ const SAMPLE = {
   math_score: 85.0, science_score: 92.0, english_score: 88.0
 };
 
+// Accent per group legend, cycled in schema order.
+const GROUP_DOTS = ["i", "v", "e"];
+
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
 }[c]));
 
+// a/b strong, c/d mid, e/f at risk.
+const bandOf = (grade) => ({ a: "strong", b: "strong", c: "mid", d: "mid" }[grade] || "risk");
+
 let spec = null;
+
+const EMPTY = '<p class="placeholder">' +
+  '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#8585ac" stroke-width="1.5">' +
+  '<path d="M3 17l5-5 4 3 5-7" stroke-linecap="round" stroke-linejoin="round"/>' +
+  '<circle cx="17" cy="8" r="1.6"/></svg>' +
+  'Fill in the student details and submit to see a predicted grade.</p>';
 
 function fieldHtml(f) {
   const unit = f.unit ? ' <span class="unit">(' + esc(f.unit) + ')</span>' : "";
@@ -151,11 +293,12 @@ function fieldHtml(f) {
 
 function renderForm(schema) {
   spec = schema;
-  $("fields").innerHTML = schema.groups.map((group) => {
+  $("fields").innerHTML = schema.groups.map((group, i) => {
     const fields = schema.fields.filter((f) => f.group === group);
     if (!fields.length) return "";
-    return '<fieldset><legend>' + esc(group) + '</legend><div class="grid">' +
-      fields.map(fieldHtml).join("") + '</div></fieldset>';
+    const dot = '<span class="dot ' + GROUP_DOTS[i % GROUP_DOTS.length] + '"></span>';
+    return '<fieldset><legend><span class="leg">' + dot + esc(group) + '</span></legend>' +
+      '<div class="grid">' + fields.map(fieldHtml).join("") + '</div></fieldset>';
   }).join("");
 }
 
@@ -176,28 +319,42 @@ function applyValues(values) {
 }
 
 function showMessage(target, text) {
-  $(target).innerHTML = text ? '<div class="msg error">' + esc(text) + '</div>' : "";
-}
-
-function clearResult() {
-  $("result").innerHTML = '<p class="placeholder">Fill in the form and submit to see a predicted grade.</p>';
+  $(target).innerHTML = text ? '<div class="msg">' + esc(text) + '</div>' : "";
 }
 
 function renderResult(data) {
+  const band = bandOf(data.grade);
+  const R = 54, C = 2 * Math.PI * R;
+  const arc = C * data.confidence;
+
+  const ring =
+    '<svg viewBox="0 0 122 122">' +
+      '<circle cx="61" cy="61" r="' + R + '" fill="none" stroke="#101030" stroke-width="7"/>' +
+      '<circle cx="61" cy="61" r="' + R + '" fill="none" stroke="currentColor" stroke-width="7"' +
+      ' stroke-linecap="round" stroke-dasharray="' + arc.toFixed(1) + ' ' + C.toFixed(1) + '"/>' +
+    '</svg>';
+
   const bars = data.breakdown.map((b) =>
     '<div class="bar-row">' +
       '<span class="bar-grade">' + esc(b.grade) + '</span>' +
-      '<span class="track"><span class="fill" style="width:' + (b.probability * 100).toFixed(1) + '%"></span></span>' +
+      '<span class="track"><span class="fill band-' + bandOf(b.grade) + '"' +
+        ' data-w="' + (b.probability * 100).toFixed(1) + '"></span></span>' +
       '<span class="bar-pct">' + (b.probability * 100).toFixed(0) + '%</span>' +
     '</div>'
   ).join("");
 
   $("result").innerHTML =
-    '<p class="sub">Predicted final grade</p>' +
-    '<div class="grade">' + esc(data.grade) + '</div>' +
-    '<div class="grade-label">' + esc(data.label) + '</div>' +
+    '<p class="eyebrow">Predicted final grade</p>' +
+    '<div class="medal band-' + band + '">' + ring +
+      '<span class="grade">' + esc(data.grade) + '</span></div>' +
+    '<div class="grade-label band-' + band + '">' + esc(data.label) + '</div>' +
     '<div class="confidence">' + (data.confidence * 100).toFixed(0) + '% confidence</div>' +
     '<div class="bars"><h2>Probability by grade</h2>' + bars + '</div>';
+
+  // Widths applied after paint so the bars animate in.
+  requestAnimationFrame(() => {
+    $("result").querySelectorAll(".fill").forEach((el) => { el.style.width = el.dataset.w + "%"; });
+  });
 }
 
 // FastAPI returns validation errors as a list of {loc, msg}; plain errors as a string.
@@ -235,17 +392,19 @@ async function predict(event) {
 }
 
 async function init() {
+  $("result").innerHTML = EMPTY;
+
   try {
     const response = await fetch("/api/schema");
     if (!response.ok) throw new Error("Could not load the form schema.");
     renderForm(await response.json());
   } catch (err) {
-    $("fields").innerHTML = '<div class="msg error">' + esc(err.message) + '</div>';
+    $("fields").innerHTML = '<div class="msg">' + esc(err.message) + '</div>';
     return;
   }
 
   const health = await fetch("/api/health").then((r) => r.json()).catch(() => null);
-  if (health && !health.model_loaded) {
+  if (health && health.status !== "ok") {
     showMessage("form-msg", health.error || "The model is not loaded on the server.");
   }
 
@@ -255,7 +414,7 @@ async function init() {
     const defaults = {};
     spec.fields.forEach((f) => { defaults[f.name] = f.default; });
     applyValues(defaults);
-    clearResult();
+    $("result").innerHTML = EMPTY;
     showMessage("form-msg", "");
   });
 }

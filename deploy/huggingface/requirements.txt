@@ -1,0 +1,8 @@
+# Candidate environment for the existing sklearn 1.6.1 artifacts.
+# Validate in Python 3.11 before creating a paid endpoint; see HUGGING_FACE.md.
+scikit-learn==1.6.1
+numpy==2.2.6
+pandas==2.2.3
+scipy==1.15.3
+joblib==1.4.2
+pydantic==2.13.5

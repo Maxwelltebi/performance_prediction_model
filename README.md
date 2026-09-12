@@ -80,6 +80,11 @@ and the model cannot drift apart. `GET /api/health` reports whether the artifact
 
 ## Deploying
 
+For a separate Hugging Face inference service with a lightweight Render web app,
+follow [the Hugging Face walkthrough](HUGGING_FACE.md). It includes artifact upload,
+environment validation, endpoint setup, secrets, and the web service settings.
+The instructions below describe the original local-inference deployment.
+
 The frontend is served from the same origin as the API, so there is no CORS setup and
 nothing to build — deploy the repo as one service.
 

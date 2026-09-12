@@ -374,18 +374,31 @@ async function predict(event) {
   button.textContent = "Predicting…";
   showMessage("form-msg", "");
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000);
+  const waiting = setTimeout(() => {
+    showMessage("form-msg", "Still waiting for the prediction service. It may be starting up.");
+  }, 5000);
+
   try {
     const response = await fetch("/api/predict", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(collect())
+      body: JSON.stringify(collect()),
+      signal: controller.signal
     });
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
     if (!response.ok) throw new Error(detailOf(data) || "Request failed (" + response.status + ")");
+    if (!data) throw new Error("The prediction service returned an unexpected response. Please try again.");
+    showMessage("form-msg", "");
     renderResult(data);
   } catch (err) {
-    showMessage("form-msg", err.message);
+    showMessage("form-msg", err.name === "AbortError"
+      ? "The prediction service is taking too long. Please try again shortly."
+      : err.message);
   } finally {
+    clearTimeout(timeout);
+    clearTimeout(waiting);
     button.disabled = false;
     button.textContent = "Predict grade";
   }
@@ -395,17 +408,12 @@ async function init() {
   $("result").innerHTML = EMPTY;
 
   try {
-    const response = await fetch("/api/schema");
+    const response = await fetch("/form-schema.json");
     if (!response.ok) throw new Error("Could not load the form schema.");
     renderForm(await response.json());
   } catch (err) {
     $("fields").innerHTML = '<div class="msg">' + esc(err.message) + '</div>';
     return;
-  }
-
-  const health = await fetch("/api/health").then((r) => r.json()).catch(() => null);
-  if (health && health.status !== "ok") {
-    showMessage("form-msg", health.error || "The model is not loaded on the server.");
   }
 
   $("form").addEventListener("submit", predict);

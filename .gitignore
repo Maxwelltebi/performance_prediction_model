@@ -6,3 +6,6 @@ __pycache__/
 /models
 .hf-release/
 .venv-hf/
+public/
+.vercel/
+.env.*

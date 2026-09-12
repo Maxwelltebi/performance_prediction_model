@@ -24,11 +24,11 @@ state: dict = {"predictor": None, "error": None}
 async def lifespan(app: FastAPI):
     """Initialize local inference or the remote client once per process."""
     state.update(predictor=None, error=None)
-    state["mode"] = "remote" if os.getenv("HF_ENDPOINT_URL") else "local"
+    state["mode"] = "remote" if os.getenv("HF_ENDPOINT_URL") or os.getenv("VERCEL") == "1" else "local"
     try:
         if state["mode"] == "remote":
             state["predictor"] = RemoteGradePredictor(
-                os.environ["HF_ENDPOINT_URL"], os.getenv("HF_TOKEN", "")
+                os.getenv("HF_ENDPOINT_URL", ""), os.getenv("HF_TOKEN", "")
             )
         else:
             from predictor import GradePredictor
@@ -79,6 +79,7 @@ def health(response: Response) -> dict:
 
 
 @app.get("/api/schema")
+@app.get("/form-schema.json", include_in_schema=False)
 def schema() -> dict:
     """Field spec the frontend renders its form from."""
     return form_schema()

@@ -28,7 +28,7 @@ main.py              Original notebook export — see "Known issues" below
 
 ```powershell
 python -m venv venv
-venv\Scripts\python.exe -m pip install -r requirements.txt
+venv\Scripts\python.exe -m pip install -r requirements-local.txt
 .\run.ps1
 ```
 
@@ -80,10 +80,17 @@ and the model cannot drift apart. `GET /api/health` reports whether the artifact
 
 ## Deploying
 
+**Recommended portfolio deployment:** [Vercel + Hugging Face](VERCEL.md).
+Vercel serves the page and generated form schema from its CDN; the Python function
+calls HF only when a visitor requests a prediction. `requirements.txt` now installs
+the lightweight web runtime; local model inference uses `requirements-local.txt`.
+
 For a separate Hugging Face inference service with a lightweight Render web app,
 follow [the Hugging Face walkthrough](HUGGING_FACE.md). It includes artifact upload,
 environment validation, endpoint setup, secrets, and the web service settings.
 The instructions below describe the original local-inference deployment.
+For that deployment, install `requirements-local.txt` and leave `HF_ENDPOINT_URL`
+unset. The default `requirements.txt` is intended for remote HF inference.
 
 The frontend is served from the same origin as the API, so there is no CORS setup and
 nothing to build — deploy the repo as one service.
@@ -94,8 +101,8 @@ uvicorn app:app --app-dir backend --host 0.0.0.0 --port $PORT
 
 A `Procfile` with that command is included for Render / Railway / Heroku-style hosts.
 
-`models/best_random_forest_model.joblib` is ~70 MB and **is committed**, because the app
-cannot start without it. That is under GitHub's 100 MB hard limit but above its 50 MB
+`models/best_random_forest_model.joblib` is ~70 MB and **is committed** for local
+inference. Vercel excludes it because predictions run on HF. That is under GitHub's 100 MB hard limit but above its 50 MB
 warning; consider Git LFS, or fetching the artifact at boot from object storage, if the
 repo history gets heavy.
 

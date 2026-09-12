@@ -1,0 +1,15 @@
+venv/
+.venv*/
+.hf-release/
+models/
+deploy/
+tests/
+backend/test_*.py
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+.git/
+.env
+.env.*
+*.ipynb
+main.py

@@ -2,6 +2,9 @@
 
 This setup separates the web application from model inference:
 
+For the current Vercel web deployment, use [VERCEL.md](VERCEL.md) after completing
+the HF steps below. Render remains an alternative web host described in step 5.
+
 ```text
 Browser -> Render FastAPI app -> Hugging Face Inference Endpoint
                                       |
